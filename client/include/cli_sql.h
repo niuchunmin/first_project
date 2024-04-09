@@ -19,7 +19,7 @@
 #include <sqlite3.h>
 #include <string.h>
 
-#define CONFIG_DEBUG
+//#define CONFIG_DEBUG
 #ifdef  CONFIG_DEBUG
 #define dbg_print(format,args...) printf(format,##args)
 #else

@@ -40,7 +40,7 @@
 #include <sqlite3.h>
 #include "cli_sql.h"
 #include "cli_func.h"
-#include "ds18b20.h"
+//#include "ds18b20.h"
 #include "socket.h"
 
 

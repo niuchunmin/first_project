@@ -35,6 +35,7 @@ int main (int argc, char **argv)
 	char                *sqlnam3="DB_TB_CLI";
 	int                  tb_num=-1;
 	char                 rt_buf[128];
+	int                  isConnect=-1;
 
 	struct option       opts[]={
 		{"ipaddr",required_argument,NULL,'i'},
@@ -43,7 +44,6 @@ int main (int argc, char **argv)
 		{"help",no_argument,NULL,'h'},
 		{NULL,0,NULL,0}
 	};
-	printf ("crazy!\n");
 	while((ch=getopt_long(argc,argv,"i:p:t:h",opts,NULL))!=-1)
 	{
 		switch(ch)
@@ -69,7 +69,7 @@ int main (int argc, char **argv)
 		return 0;
 	}
 	conn_fd=connect_to_server(servip,&port);
-	printf ("test:00\n");
+	dbg_print ("test:00\n");
 	while(1)
 	{
 		/* Acquire device id */
@@ -79,7 +79,7 @@ int main (int argc, char **argv)
 			printf ("Get device id failure:%s\n",strerror(errno));
 			goto cleanUp;
 		}
-		printf("Debug_Device id:%s\n",id);
+		dbg_print("Debug_Device id:%s\n",id);
 		get_time(time_buf);
 		if((rv=get_temperature(&temp))<0)
 		{
@@ -88,8 +88,8 @@ int main (int argc, char **argv)
 		}
 		snprintf(all_buf,sizeof(all_buf),"%s %s %.2f",id,time_buf,temp);
 		/* connect or not */
-		rv=socketconnected(conn_fd);
-		if(1==rv)//connected successfully!upload data to server!!
+		isConnect=socketconnected(conn_fd);
+		if(1==isConnect)//connected successfully!upload data to server!!
 		{
 			if(write(conn_fd,all_buf,strlen(all_buf))<0)
 			{
@@ -164,6 +164,7 @@ int main (int argc, char **argv)
 
 				}while(0!=tb_num);
 			}
+			sqlite3_close(db);
 		}
 clean:
 		sqlite3_close(db);

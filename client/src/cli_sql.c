@@ -129,11 +129,11 @@ int determine_table_exist(char *table_name,sqlite3 *db,char *rt_buf)
 		exit(0);
 	}
 	memset(rt_buf,0,sizeof(rt_buf));
-	//printf ("debug00:%s,%s\n",rt_buf,&rt_buf);
-	printf("debug:%s\n",dbResult[0]);
-	printf ("debug:%s\n",dbResult[1]);
-	printf ("debug:%s\n",dbResult[2]);
-	printf ("debug:%s\n",dbResult[3]);
+	dbg_print ("debug00:%s,%s\n",rt_buf,&rt_buf);
+	dbg_print("debug:%s\n",dbResult[0]);
+	dbg_print ("debug:%s\n",dbResult[1]);
+	dbg_print ("debug:%s\n",dbResult[2]);
+	dbg_print("debug:%s\n",dbResult[3]);
 	snprintf(rt_buf,128,"%s %s %.2f",dbResult[3],dbResult[4],atof(dbResult[5]));
 	printf("debug01:%s\n",rt_buf);
 	return nRow;
