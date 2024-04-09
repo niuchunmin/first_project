@@ -167,7 +167,6 @@ int main (int argc, char **argv)
 		}
 clean:
 		sqlite3_close(db);
-		close(conn_fd);
 
 		sleep(temp_time);
 	}
