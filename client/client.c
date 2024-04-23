@@ -13,18 +13,20 @@
 
 
 #include "client.h"
-
 #include "proc.h"
 #include "logger.h"
+
 
 int check_sample_time(time_t *last_time,int interval)
 {
 	time_t          current_time;
 	int             need = 0;
+	double          diff;
 
 	time(&current_time);
 
-	if( current_time >= (*last_time+interval) )
+	diff = difftime(current_time, *last_time);
+	if( diff >= interval )
 	{
 		need = 1;
 		*last_time = current_time;
@@ -34,49 +36,49 @@ int check_sample_time(time_t *last_time,int interval)
 	return need;
 }
 
+
 int main (int argc, char **argv)
 {
-	char                *servip=NULL;
-	int                  port=0;
-	int                  rv=-1;
+	char                *servip = NULL;
+	int                  port = 0;
+	int                  rv = -1;
 	struct sockaddr_in   serv_addr;
 	char                 buf[1024];
-	int                  ch=-1;
-	int                  temp_interval=0;
+	int                  ch = -1;
+	int                  temp_interval = 60;
 	float                temp;
 	char                 id[16];
-	int                  len=16;
+	int                  len = 16;
 	char                 time_buf[128];
 	char                 all_buf[256];
 	int                  error = 0;
 	socklen_t            err_len = 0;
 	sqlite3             *db;
-	int                  tb_num=-1;
+	int                  tb_num = -1;
 	char                 rt_buf[128];
-	int                  isConnect=-1;
+	int                  isConnect = -1;
 	const char           db_name[]="client_db";
 	sock_s               sock;
 	data_s               all_data;
 	pack_func_t          pack_data_p = pack_data;
 	time_t               last_time;
 	int                  sample_flag;
-	int                  interval = 60;
 	int                  pack_bytes = 0;
 	char                *logfile = "sock_client.log";
 	int                  loglevel = LOG_LEVEL_INFO;
 	int                  logsize = 10;
-	int                  daemon_run = 0;
+	int                  daemon_run = 1;
 
 	struct option       opts[]={
-		{"ipaddr",required_argument,NULL,'i'},
-		{"port",required_argument,NULL,'p'},
-		{"temp_interval",required_argument,NULL,'t'},
-		{"daemon",no_argument,NULL,'b'},
-		{"help",no_argument,NULL,'h'},
-		{NULL,0,NULL,0}
+		{"ipaddr", required_argument, NULL, 'i'},
+		{"port", required_argument, NULL, 'p'},
+		{"temp_interval", required_argument, NULL, 't'},
+		{"daemon", no_argument, NULL, 'b'},
+		{"help", no_argument, NULL, 'h'},
+		{NULL, 0, NULL, 0}
 	};
 
-	while((ch=getopt_long(argc,argv,"i:p:t:bh",opts,NULL))!=-1)
+	while( (ch=getopt_long(argc,argv,"i:p:t:bh",opts,NULL)) != -1)
 	{
 		switch(ch)
 		{
@@ -90,7 +92,7 @@ int main (int argc, char **argv)
 				temp_interval = atoi(optarg);
 				break;
             case 'b':
-				daemon_run = 1;
+				daemon_run = 0;
 				logfile = "console";
 				loglevel = LOG_LEVEL_DEBUG;
 				break;
@@ -106,10 +108,6 @@ int main (int argc, char **argv)
 		return 0;
 	}
 
-	if( daemon_run )
-	{
-		daemon(0,0);
-	}
 
 	if( log_open(logfile, loglevel, logsize, THREAD_LOCK_NONE) < 0 )
 	{
@@ -117,15 +115,14 @@ int main (int argc, char **argv)
 		return 1;
 	}
 
+
 	install_default_signal();
-
 	log_info("Program start running.\n");
+	rv = socket_info_init(&sock, servip, port);
 
-	rv = socket_info_init(&sock,servip,port);
 
 	if((rv = create_table("client.db")) <0) 
 	{   
-
 		 log_error ("Create database failure:%s\n",strerror(errno));
 		 database_term();
 	 }   
@@ -156,7 +153,8 @@ int main (int argc, char **argv)
 
 			memset(all_buf, 0, sizeof(all_buf));
 			pack_bytes = pack_data_p(&all_data, all_buf, sizeof(all_buf));
-			log_debug ("test:all data:%s %s %.2f\n",all_data.devid,all_data.sample_time,all_data.temp);
+			log_debug ("test:all data:%s %s %.2f\n",all_data.devid,
+					all_data.sample_time,all_data.temp);
             sample_flag = 1;
 		}
 
@@ -170,7 +168,7 @@ int main (int argc, char **argv)
 		isConnect = socketconnected(&sock);
 	
 		log_debug ("test:%d\n",isConnect);
-		if( 1 != isConnect)
+		if( 1 != isConnect)//disconnected
 		{
 			if( sock.conn_fd > 0 )
 			{

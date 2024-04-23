@@ -106,7 +106,7 @@ int connect_to_server(sock_s *sock)
 		}
 		else
 		{
-			printf ("domain name resolution [%s->%s]\n",sock->servip,inaddr);
+			printf ("domain name resolution [%s->%s]\n",sock->servip,ipaddr);
 			close(sockfd);
 			continue;
 		}
