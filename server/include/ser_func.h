@@ -17,6 +17,16 @@
 #include <stdio.h>
 #include <string.h>
 
+#define     DEVICEID_LEN  16
+#define     TIME_LEN     32
+
+typedef struct data_pack{
+	char     devid[DEVICEID_LEN];
+	char     sample_time[TIME_LEN];
+	float    temp;
+}data_s;
+
+
 #define  CONFIG_DEBUG
 #ifdef   CONFIG_DEBUG
 #define  dbg_print(format,args...) printf(format,##args)

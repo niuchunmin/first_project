@@ -1,26 +1,29 @@
 LIBNAME = myClient
 
-INSTPATH = `pwd`/../lib/
-INCLPATH = `pwd`/../include/
-
+INSTPATH = `pwd`/../sqlite3/install/lib
+INCLPATH = `pwd`/../sqlite3/install/include
+INSTALLPATH = `pwd`/../lib 
+INCLUDEPATH = `pwd`/../include
 CC = gcc 
-AD = ar
+AR = ar
 
-all:dynamic_lib
-	@make install
+all:static_lib
 	@make clear
+	@make install
 
-dynamic_lib:
-	${CC} -shared -fPIC *.c -o lib${LIBNAME}.so -I ${INCLPATH}
+static_lib:
+	${CC} -c *.c -L ${INSTPATH} -I ${INCLPATH} 
+	${AR} -rcs lib${LIBNAME}.a  *.o
 
 install:
-	cp -rf lib${LIBNAME}.* ${INSTPATH}
+	cp lib${LIBNAME}.* ${INSTALLPATH}
+	cp -rf *.h ${INCLUDEPATH}
 
 uninstall:
 	rm -f ${INSTPATH}/lib${LIBNAME}.*
 
 clear:
-	rm -f *.so
+	rm -f *.o
 
 clean:clear
 	rm -f lib${LIBNAME}.*

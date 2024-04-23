@@ -17,6 +17,9 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 #include <string.h>
+#include "ser_func.h"
+#include "logger.h"
+
 #define CONFIG_DEBUG
 #ifdef  CONFIG_DEBUG
 #define dbg_print(format,args...) printf(format,##args)
@@ -25,11 +28,12 @@
 #endif
 
 #define MAX_SIZE 20
-extern int        create_table(sqlite3 *db,char *table_name);
-extern int        table_insert(sqlite3 *db,char *table_name,char *device_num,char *time,float * temp);
-extern int        table_delete(sqlite3 *db,char *table_name);
-extern int        table_select(sqlite3 *db,char *table_name);
-extern int        determine_table_exist(char *table_name,sqlite3 *db,char *tr_buf);
+extern int        create_table(const char *db_file);
+extern int        table_insert(data_s *all_bug);
+extern int        table_delete();
+extern int        table_select();
+extern int        determine_table_exist(char *tr_buf);
+extern void       database_term(void);
 static int        callback(void *data,int argc,char **argv,char **azColName);
 
 #endif

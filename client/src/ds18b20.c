@@ -28,7 +28,7 @@ int get_temperature(float *temp)
 	dirp=opendir(w1_path);
 	if(!dirp)
 	{
-		printf("Open floder %s failure:%S\n",w1_path,strerror(errno));
+		log_error ("Open floder %s failure:%S\n",w1_path,strerror(errno));
 		rv=-1;
 		goto cleanup;
 	}
@@ -47,7 +47,7 @@ int get_temperature(float *temp)
 	if(!found)
 	{
 
-		printf ("Cannot find ds18b20 chipset\n");
+		log_error ("Cannot find ds18b20 chipset\n");
 		rv=-2;
 		goto cleanup;
 	}
@@ -57,7 +57,7 @@ int get_temperature(float *temp)
 	fd=open(w1_path,O_RDONLY);
 	if(fd<0)
 	{
-		printf ("Open file failure:%s\n",strerror(errno));
+		log_error ("Open file failure:%s\n",strerror(errno));
 		rv=-3;
 		goto cleanup;
 	}
@@ -67,7 +67,7 @@ int get_temperature(float *temp)
 	if(read(fd,buf,sizeof(buf))<0)
 	{
 
-		printf ("Read file failure:%s\n",strerror(errno));
+		log_error ("Read file failure:%s\n",strerror(errno));
 		rv=-4;
 		goto cleanup;
 	}
@@ -76,14 +76,14 @@ int get_temperature(float *temp)
 	if(!ptr)
 	{
 
-		printf ("Can not find string t=\n");
-
+		log_error ("Can not find string t=\n");
 		rv =-5;
 		goto cleanup;
 	}
 	ptr += 2;
 	*temp=atof(ptr)/1000;
-	close(fd);
+
+
 cleanup:
 	if(fd)
 		close(fd);

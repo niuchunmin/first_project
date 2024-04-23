@@ -32,11 +32,12 @@ int main (int argc, char **argv)
 	struct epoll_event  event_array[MAX_EVENTS];
 	int                 events;
 	sqlite3            *db;
-	char                buf_sn[32];
-	char                buf_time[128];
+	char                buf_sn[16];
+	char                buf_time[32];
 	char                table_temp[32];
 	float               tb_temp;
 	int                 ret=0;
+	data_s              receive_data;
 
 	struct option       opts[]={
 		{"daemon",no_argument,NULL,'b'},
@@ -69,6 +70,8 @@ int main (int argc, char **argv)
 		return -1;
 	}
 	set_socket_rlimit();
+
+
 	if((listen_fd=socket_server_init(NULL,port))<0)
 	{
 
@@ -77,8 +80,10 @@ int main (int argc, char **argv)
 	}
 	printf ("%s server start to listen on port %d\n",argv[0],port);
 
+
 	if(daemon_run)
 		daemon(0,0);
+
 
 	if((epollfd = epoll_create(MAX_EVENTS))<0)
 	{
@@ -87,8 +92,10 @@ int main (int argc, char **argv)
 		return -3;
 	}
 
+
 	event.events = EPOLLIN;
 	event.data.fd = listen_fd;
+
 
 	if(epoll_ctl(epollfd,EPOLL_CTL_ADD,listen_fd,&event)<0)
 	{
@@ -96,6 +103,8 @@ int main (int argc, char **argv)
 		printf ("epoll add listen socket failure:%s\n",strerror(errno));
 		return -4;
 	}
+
+
 	for( ; ; )
 	{
 		events = epoll_wait(epollfd,event_array,MAX_EVENTS,-1);
@@ -147,7 +156,6 @@ int main (int argc, char **argv)
 				printf ("epoll add new client socket[%d] successfully.\n",conn_fd);
 			}
 			else
-
 			{
 				memset(buf,0,sizeof(buf));
 				if((read_rv = read(event_array[i].data.fd,buf,sizeof(buf)))<=0)
@@ -166,41 +174,32 @@ int main (int argc, char **argv)
 					ret = sscanf(buf,"%s %s %s",buf_sn,buf_time,table_temp);
 					printf ("debug04:%s,%s,%.2f\n",buf_sn,buf_time,atof(table_temp));
 					tb_temp=atof(table_temp);
+					memcpy(receive_data.devid, buf_sn, sizeof(buf_sn));
+					memcpy(receive_data.sample_time, buf , sizeof(buf_time));
+					receive_data.temp = tb_temp;
 
-					if((rv=sqlite3_open("server.db",&db)))
-					{
-						fprintf(stderr,"Can't open database:%s\n",sqlite3_errmsg(db));
-						exit(0);
-					}
-					if((rv=create_table(db,SQL3_NAME))<0)
-					{
-
-						printf ("Create table failure:%s\n",strerror(errno));
-						goto clean;
-					}
-					printf ("Create table %s successfully\n",SQL3_NAME);
-					if((rv=table_insert(db,SQL3_NAME,buf_sn,buf_time,&tb_temp))<0)
+					create_table("server.db");
+					if((rv=table_insert(&receive_data))<0)
 					{
 
 						printf ("Insert data to table failure:%s\n",strerror(errno));
 						goto clean;
 					}
 					printf ("Insert data to table successfully!\n");
-					if((rv=table_select(db,SQL3_NAME))<0)
+					if( ( rv=table_select() )<0 )
 					{
 
 						printf ("Select data from table failure:%s\n",strerror(errno));
 						goto clean;
 					}
 
-					sqlite3_close(db);
 				}
 			}
 		}
 	}
 
 clean:
-	sqlite3_close(db);
+	database_term();
 cleanUp:
 	close(listen_fd);
 	return 0;
